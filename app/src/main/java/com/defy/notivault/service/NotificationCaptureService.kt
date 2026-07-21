@@ -12,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import java.text.Normalizer
 import java.time.LocalTime
 
 class NotificationCaptureService : NotificationListenerService() {
@@ -66,29 +65,13 @@ class NotificationCaptureService : NotificationListenerService() {
     }
 
     private fun shouldTriggerUberRide(packageName: String, title: String, text: String): Boolean {
-        val isWhatsApp = packageName == "com.whatsapp" || packageName == "com.whatsapp.w4b"
-        if (!isWhatsApp) return false
-
-        val normalizedTitle = normalizeForComparison(title)
-        val normalizedText = normalizeForComparison(text)
-
-        val isContactMatch = normalizedTitle.contains("suely ferias")
-        val hasKeyword = normalizedText.contains("uber")
-        if (!isContactMatch || !hasKeyword) return false
-
+        // TESTE: dispara em qualquer notificação, sem checar app/remetente/palavra-chave.
         val now = System.currentTimeMillis()
         val elapsed = now - lastUberTriggerAt
         if (elapsed in 0 until UBER_TRIGGER_COOLDOWN_MS) return false
 
         lastUberTriggerAt = now
         return true
-    }
-
-    private fun normalizeForComparison(input: String): String {
-        if (input.isBlank()) return ""
-        return Normalizer
-            .normalize(input.lowercase(), Normalizer.Form.NFD)
-            .replace("\\p{Mn}+".toRegex(), "")
     }
 
     private fun resolveRouteByTime(): UberRoute {
